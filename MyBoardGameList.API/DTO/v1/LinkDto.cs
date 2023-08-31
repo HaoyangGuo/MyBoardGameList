@@ -1,4 +1,4 @@
-namespace MyBoardGameList.API.DTO
+namespace MyBoardGameList.API.DTO.v1
 {
     public class LinkDto
     {

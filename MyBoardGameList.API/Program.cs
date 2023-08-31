@@ -1,11 +1,21 @@
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc(
+        "v1",
+        new OpenApiInfo { Title = "MyBoardGameList", Version = "v1.0" });
+    options.SwaggerDoc(
+        "v2",
+        new OpenApiInfo { Title = "MyBoardGameList", Version = "v2.0" });
+});
 
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(cfg => {
@@ -20,6 +30,17 @@ builder.Services.AddCors(options => {
         cfg.AllowAnyMethod(); 
         });
 });
+ 
+builder.Services.AddApiVersioning(options => {
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+});
+ 
+builder.Services.AddVersionedApiExplorer(options => {
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 var app = builder.Build();
 
@@ -27,7 +48,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint(
+            $"/swagger/v1/swagger.json",
+            $"MyBoardGameList v1");
+        options.SwaggerEndpoint(
+            $"/swagger/v2/swagger.json",
+            $"MyBoardGameList v2");
+    });
 }
  
 if (app.Configuration.GetValue<bool>("UseDeveloperExceptionPage"))
@@ -41,17 +70,23 @@ app.UseCors();
 
 app.UseAuthorization();
 
-app.MapGet("/error", 
+app.MapGet("/error",
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     [EnableCors("AnyOrigin")]
     [ResponseCache(NoStore = true)]
     () => Results.Problem());
 
-app.MapGet("/error/test", 
+app.MapGet("/error/test",
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     [EnableCors("AnyOrigin")]
     [ResponseCache(NoStore = true)]
     () => { throw new Exception("test"); });
 
 app.MapGet("/cod/test",
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     [EnableCors("AnyOrigin")]
     [ResponseCache(NoStore = true)] 
     () => Results.Text("<script>" +

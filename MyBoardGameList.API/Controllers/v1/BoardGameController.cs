@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using MyBoardGameList.API.DTO;
+using MyBoardGameList.API.DTO.v1;
 
-namespace MyBoardGameList.API.Controllers
+namespace MyBoardGameList.API.Controllers.v1
 {
-    [Route("[controller]")]
+    [Route("v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class BoardGamesController : ControllerBase
     {
         private readonly ILogger<BoardGamesController> _logger;
